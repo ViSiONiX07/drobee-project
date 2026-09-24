@@ -1,6 +1,3 @@
-Absolutely. Copy **everything inside this block** directly into your GitHub `README.md`.
-
-````markdown
 # 🐝 Bee-Brain
 
 ### Bio-Inspired Autonomous Micro-Drone for Reactive Flight, Motion Detection & Sensor-Based Spatial Reconstruction
@@ -23,18 +20,18 @@ Instead of relying on computationally expensive perception pipelines, the projec
 
 The system combines:
 
-- 🧠 **Reichardt / EMD-inspired motion detection**
-- 👁️ **LGMD-inspired looming and collision detection**
-- 📏 **VL53L0X time-of-flight distance sensing**
-- 🖱️ **ADNS3080 optical-flow sensing**
-- ⚙️ **ESP32-S3 embedded flight control**
-- 🎛️ **PID-based control**
-- 🛡️ **Flight safety and failsafe mechanisms**
-- 📡 **Structured telemetry**
-- 🖥️ **PySide6 monitoring dashboard**
-- 🌐 **Webots-based simulation**
-- 🗺️ **Open3D-based point-cloud reconstruction**
-- 🧪 **Integration testing**
+* 🧠 **Reichardt / EMD-inspired motion detection**
+* 👁️ **LGMD-inspired looming and collision detection**
+* 📏 **VL53L0X time-of-flight distance sensing**
+* 🖱️ **ADNS3080 optical-flow sensing**
+* ⚙️ **ESP32-S3 embedded flight control**
+* 🎛️ **PID-based control**
+* 🛡️ **Flight safety and failsafe mechanisms**
+* 📡 **Structured telemetry**
+* 🖥️ **PySide6 monitoring dashboard**
+* 🌐 **Webots-based simulation**
+* 🗺️ **Open3D-based point-cloud reconstruction**
+* 🧪 **Integration testing**
 
 ---
 
@@ -77,18 +74,18 @@ Bee-Brain uses this concept as the basis for a lightweight looming/collision det
 
 The current hardware architecture is centered around a lightweight micro-drone platform.
 
-| Component | Purpose |
-|---|---|
-| **Seeed XIAO ESP32-S3** | Main flight-control processor |
-| **VL53L0X / ToF sensor** | Downward distance / altitude measurement |
-| **ADNS3080** | Downward optical-flow measurement |
-| **4 × 8520 Coreless Motors** | Propulsion |
-| **IRLZ44N MOSFET stage** | Motor switching |
-| **1N4007 diodes** | Flyback protection |
-| **10kΩ pulldowns** | MOSFET gate control |
-| **1S LiPo 300–500mAh** | Flight power |
-| **TP4056** | Battery charging |
-| **SPDT switch** | Power control |
+| Component                    | Purpose                                  |
+| ---------------------------- | ---------------------------------------- |
+| **Seeed XIAO ESP32-S3**      | Main flight-control processor            |
+| **VL53L0X / ToF sensor**     | Downward distance / altitude measurement |
+| **ADNS3080**                 | Downward optical-flow measurement        |
+| **4 × 8520 Coreless Motors** | Propulsion                               |
+| **IRLZ44N MOSFET stage**     | Motor switching                          |
+| **1N4007 diodes**            | Flyback protection                       |
+| **10kΩ pulldowns**           | MOSFET gate control                      |
+| **1S LiPo 300–500mAh**       | Flight power                             |
+| **TP4056**                   | Battery charging                         |
+| **SPDT switch**              | Power control                            |
 
 The current flight architecture does **not require an IMU**. An IMU may be considered as a future enhancement.
 
@@ -135,7 +132,7 @@ The current flight architecture does **not require an IMU**. An IMU may be consi
               │ Mapping / Visualization │
               │        Open3D            │
               └─────────────────────────┘
-````
+```
 
 ---
 
@@ -175,9 +172,7 @@ Example telemetry packet:
 
 The detailed telemetry specification is maintained in:
 
-```text
-docs/telemetry/telemetry-spec.md
-```
+[`docs/telemetry/telemetry-spec.md`](docs/telemetry/telemetry-spec.md)
 
 ---
 
@@ -326,9 +321,7 @@ The simulation layer is intended to provide:
 
 Simulation components are located under:
 
-```text
-simulation/
-```
+`simulation/`
 
 ---
 
@@ -433,9 +426,7 @@ Implement → Test → Commit → Push → Pull Request → Review → Merge
 
 Project documentation is organized under:
 
-```text
-docs/
-```
+`docs/`
 
 Important documents:
 
@@ -480,6 +471,11 @@ The repository currently contains the system architecture, interfaces, documenta
 
 The physical flight platform should be tested incrementally and under controlled conditions.
 
+---
+
+## 📄 License
+
+See [`LICENSE`](LICENSE) for licensing information.
 
 ---
 
@@ -487,6 +483,4 @@ The physical flight platform should be tested incrementally and under controlled
 
 ### Bio-inspired intelligence. Embedded control. Autonomous flight.
 
-```text
-Sense → Estimate → Detect → Decide → Control → Telemetry
-```
+**Sense → Estimate → Detect → Decide → Control → Telemetry**
