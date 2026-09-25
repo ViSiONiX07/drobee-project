@@ -23,3 +23,33 @@
   7. Purged Python bytecode caches (`dashboard/services/__pycache__/`).
   8. Created `BEE_BRAIN_PROJECT_CONTEXT.md` and initialized `BEE_BRAIN_ACTIVITY_LOG.md`.
 - **Validation**: Verified folder tree hierarchy, checked git status, confirmed exact single-line placeholders, and validated zero implementation logic leaks in source files.
+
+### 2026-09-25 - Telemetry Service & Packet Implementation
+- **Developer / Agent**: Antigravity
+- **Component / File Changed**: `dashboard/services/telemetry.py`
+- **What Was Implemented**:
+  - `SensorStatus` and `TelemetryPacket` Pydantic models for strict telemetry payload validation matching `docs/telemetry/telemetry-spec.md`.
+  - `TelemetryService` class managing a rolling telemetry history buffer (`deque`, `maxlen=500`).
+  - `add_packet(raw_json: str)` method parsing and validating JSON input into `TelemetryPacket` objects and raising `ValueError` on malformed/invalid payloads.
+  - `get_latest()` method returning the most recent `TelemetryPacket` or `None`.
+  - `get_history()` method returning all buffered packets as a `list[TelemetryPacket]`.
+- **Important Design Decisions**:
+  - Configured `ConfigDict(extra="forbid")` on Pydantic models to strictly enforce the specification contract and reject any undocumented fields.
+  - Exception handling converts parsing and schema validation failures into descriptive `ValueError` exceptions.
+- **Tests & Validation Performed**:
+  - Verified packet parsing, type validation, schema enforcement (rejecting missing or extra fields), error handling for malformed JSON, and deque `maxlen=500` overflow behavior via execution of Python test scripts.
+- **Current Status**: Complete and operational.
+
+### 2026-09-25 - Fake Telemetry Generator
+- **Developer / Agent**: Antigravity
+- **Component / File Changed**: `dashboard/services/fake_data_generator.py`
+- **What Was Implemented**:
+  - Added `FakeTelemetryGenerator` with stateful simulated telemetry.
+  - Added `QTimer`-based periodic generation via `start(callback, interval_ms)` and `stop()` methods.
+  - Simulated hover stability, natural battery drain, slight drift, realistic motor PWM variations, and occasional auto-recovering dropouts for communication link and sensors (ToF, Optical Flow).
+- **Important Design Decisions**:
+  - Leveraged `TelemetryPacket` directly to ensure the generated payloads comply perfectly with the specification.
+- **Tests & Validation Performed**:
+  - Confirmed generated telemetry strictly adheres to `TelemetryPacket` schema constraint validations.
+  - Verified syntax, logic, and dependency imports without executing hardware.
+- **Current Status**: Fake telemetry source ready for dashboard UI development.
