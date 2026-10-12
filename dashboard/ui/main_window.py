@@ -15,11 +15,13 @@ from PySide6.QtCore import Qt
 
 from dashboard.services.telemetry import TelemetryService
 from dashboard.services.fake_data_generator import FakeTelemetryGenerator
+from dashboard.ui.keyboard_control_panel import KeyboardControlPanel
 
 from dashboard.ui.telemetry_panel import TelemetryPanel
 from dashboard.ui.control_panel import ControlPanel
 from dashboard.ui.map_panel import MapPanel
 from dashboard.ui.diagnostics_panel import DiagnosticsPanel
+from dashboard.ui.drone_view_panel import DroneViewPanel
 
 
 class MainWindow(QMainWindow):
@@ -160,6 +162,12 @@ class MainWindow(QMainWindow):
         # Diagnostics
         self.diagnostics_panel = DiagnosticsPanel()
 
+        # 3D Drone View
+        self.drone_view_panel = DroneViewPanel()
+
+        # Separate keyboard test; existing fake-data view remains unchanged.
+        self.keyboard_control_panel = KeyboardControlPanel()
+
         # Add pages
         self.pages.addWidget(
             self.telemetry_panel
@@ -175,6 +183,15 @@ class MainWindow(QMainWindow):
 
         self.pages.addWidget(
             self.diagnostics_panel
+        )
+
+        # Keep the existing page indexes unchanged by adding this page last.
+        self.pages.addWidget(
+            self.drone_view_panel
+        )
+
+        self.pages.addWidget(
+            self.keyboard_control_panel
         )
 
         content_layout.addWidget(
@@ -323,6 +340,14 @@ class MainWindow(QMainWindow):
             "Flight Control"
         )
 
+        self.keyboard_test_button = self.create_nav_button(
+            "Keyboard Test"
+        )
+
+        self.drone_view_button = self.create_nav_button(
+            "3D Drone View"
+        )
+
         self.map_button = self.create_nav_button(
             "3D Mapping"
         )
@@ -337,6 +362,13 @@ class MainWindow(QMainWindow):
 
         sidebar_layout.addWidget(
             self.control_button
+        )
+
+        sidebar_layout.addWidget(
+            self.drone_view_button
+        )
+        sidebar_layout.addWidget(
+            self.keyboard_test_button
         )
 
         sidebar_layout.addWidget(
@@ -393,11 +425,28 @@ class MainWindow(QMainWindow):
                 )
             )
 
+        elif text == "3D Drone View":
+            button.clicked.connect(
+                lambda: self.show_page(
+                    4,
+                    "3D DRONE VIEW",
+                    button,
+                )
+            )
+
         elif text == "3D Mapping":
             button.clicked.connect(
                 lambda: self.show_page(
                     2,
                     "3D MAPPING",
+                    button,
+                )
+            )
+        elif text == "Keyboard Test":
+            button.clicked.connect(
+                lambda: self.show_page(
+                    5,
+                    "KEYBOARD CONTROL TEST",
                     button,
                 )
             )
@@ -434,6 +483,8 @@ class MainWindow(QMainWindow):
         self.update_navigation(
             button
         )
+        if index == 5:
+            self.keyboard_control_panel.activate_controls()
 
     # ======================================================
     # NAVIGATION STYLE
@@ -446,6 +497,7 @@ class MainWindow(QMainWindow):
         buttons = [
             self.telemetry_button,
             self.control_button,
+            self.drone_view_button,
             self.map_button,
             self.diagnostics_button,
         ]
@@ -490,6 +542,9 @@ class MainWindow(QMainWindow):
             self.telemetry_panel.update_telemetry(
                 packet
             )
+
+            # Keep the drone-view metrics synchronized with telemetry.
+            self.drone_view_panel.update_telemetry(packet)
 
             # Update diagnostics data source
             self.diagnostics_panel.data_source.setText(
