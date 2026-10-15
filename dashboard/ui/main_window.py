@@ -1,5 +1,6 @@
 import sys
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -11,17 +12,15 @@ from PySide6.QtWidgets import (
     QStackedWidget,
     QFrame,
 )
-from PySide6.QtCore import Qt
 
-from dashboard.services.telemetry import TelemetryService
 from dashboard.services.fake_data_generator import FakeTelemetryGenerator
-from dashboard.ui.keyboard_control_panel import KeyboardControlPanel
-
-from dashboard.ui.telemetry_panel import TelemetryPanel
+from dashboard.services.telemetry import TelemetryService
 from dashboard.ui.control_panel import ControlPanel
-from dashboard.ui.map_panel import MapPanel
 from dashboard.ui.diagnostics_panel import DiagnosticsPanel
 from dashboard.ui.drone_view_panel import DroneViewPanel
+from dashboard.ui.keyboard_control_panel import KeyboardControlPanel
+from dashboard.ui.map_panel import MapPanel
+from dashboard.ui.telemetry_panel import TelemetryPanel
 
 
 class MainWindow(QMainWindow):
@@ -112,6 +111,7 @@ class MainWindow(QMainWindow):
         # --------------------------------------------------
 
         header = QFrame()
+        header.setObjectName("header")
 
         header.setFixedHeight(70)
 
@@ -203,6 +203,7 @@ class MainWindow(QMainWindow):
         # --------------------------------------------------
 
         status_frame = QFrame()
+        status_frame.setObjectName("statusBar")
 
         status_frame.setFixedHeight(35)
 
@@ -222,7 +223,7 @@ class MainWindow(QMainWindow):
         )
 
         self.system_status.setStyleSheet(
-            "color: #00ff99;"
+            "color: #8CB7A1;"
         )
 
         status_layout.addWidget(
@@ -236,7 +237,7 @@ class MainWindow(QMainWindow):
         )
 
         self.data_status.setStyleSheet(
-            "color: #888888;"
+            "color: #898F80;"
         )
 
         status_layout.addWidget(
@@ -273,7 +274,7 @@ class MainWindow(QMainWindow):
         )
 
         sidebar.setFixedWidth(
-            200
+            220
         )
 
         sidebar_layout = QVBoxLayout(
@@ -365,18 +366,19 @@ class MainWindow(QMainWindow):
         )
 
         sidebar_layout.addWidget(
-            self.drone_view_button
-        )
-        sidebar_layout.addWidget(
-            self.keyboard_test_button
-        )
-
-        sidebar_layout.addWidget(
             self.map_button
         )
 
         sidebar_layout.addWidget(
             self.diagnostics_button
+        )
+
+        sidebar_layout.addWidget(
+            self.drone_view_button
+        )
+
+        sidebar_layout.addWidget(
+            self.keyboard_test_button
         )
 
         sidebar_layout.addStretch()
@@ -498,6 +500,7 @@ class MainWindow(QMainWindow):
             self.telemetry_button,
             self.control_button,
             self.drone_view_button,
+            self.keyboard_test_button,
             self.map_button,
             self.diagnostics_button,
         ]
@@ -660,7 +663,7 @@ class MainWindow(QMainWindow):
                     "color: #ff4444;"
                 )
 
-        except Exception as error:
+        except Exception as error:  # noqa: BLE001
             self.system_status.setText(
                 "● SYSTEM ERROR"
             )
@@ -694,17 +697,8 @@ class MainWindow(QMainWindow):
         size,
         bold=False,
     ):
-        from PySide6.QtGui import QFont
-
-        font = QFont(
-            "Arial",
-            size,
-        )
-
-        if bold:
-            font.setBold(True)
-
-        return font
+        from dashboard.ui.theme import get_ui_font
+        return get_ui_font(size, bold)
 
     # ======================================================
     # CLOSE EVENT
@@ -726,126 +720,8 @@ class MainWindow(QMainWindow):
 def apply_dark_style(
     app,
 ):
-    app.setStyleSheet(
-        """
-        QWidget {
-            background-color: #1e1e1e;
-            color: #eeeeee;
-            font-family: Arial;
-        }
-
-        QMainWindow {
-            background-color: #1e1e1e;
-        }
-
-        #sidebar {
-            background-color: #202020;
-            border-right: 1px solid #303030;
-        }
-
-        #logo {
-            color: #ffffff;
-        }
-
-        #sidebarSubtitle {
-            color: #777777;
-            font-size: 9px;
-            padding-left: 5px;
-        }
-
-        #pageTitle {
-            color: #eeeeee;
-            font-size: 26px;
-            font-weight: bold;
-        }
-
-        #navButton {
-            background-color: transparent;
-            color: #dddddd;
-            border: none;
-            border-radius: 6px;
-            text-align: left;
-            padding-left: 15px;
-            font-size: 13px;
-        }
-
-        #navButton:hover {
-            background-color: #2a2a2a;
-        }
-
-        #navButton[active="true"] {
-            background-color: #00b894;
-            color: #ffffff;
-        }
-
-        QFrame {
-            border-color: #333333;
-        }
-
-        QFrame[frameShape="4"] {
-            border: 1px solid #333333;
-        }
-
-        QPushButton {
-            background-color: #303030;
-            color: #eeeeee;
-            border: 1px solid #444444;
-            border-radius: 5px;
-            padding: 6px 12px;
-        }
-
-        QPushButton:hover {
-            background-color: #3a3a3a;
-        }
-
-        QPushButton:pressed {
-            background-color: #252525;
-        }
-
-        QComboBox {
-            background-color: #303030;
-            color: #eeeeee;
-            border: 1px solid #444444;
-            border-radius: 5px;
-            padding: 5px;
-        }
-
-        QComboBox:hover {
-            border: 1px solid #00b894;
-        }
-
-        QComboBox QAbstractItemView {
-            background-color: #292929;
-            color: #eeeeee;
-            selection-background-color: #00b894;
-            selection-color: #ffffff;
-            border: 1px solid #444444;
-        }
-
-        QProgressBar {
-            background-color: #303030;
-            border: 1px solid #444444;
-            border-radius: 5px;
-            text-align: center;
-            color: #eeeeee;
-        }
-
-        QProgressBar::chunk {
-            background-color: #00b894;
-            border-radius: 4px;
-        }
-
-        QScrollBar:vertical {
-            background-color: #1e1e1e;
-            width: 10px;
-        }
-
-        QScrollBar::handle:vertical {
-            background-color: #444444;
-            border-radius: 5px;
-        }
-        """
-    )
+    from dashboard.ui.theme import apply_theme
+    apply_theme(app)
 
 
 # ==========================================================
