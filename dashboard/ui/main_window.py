@@ -61,6 +61,7 @@ class MainWindow(QMainWindow):
     # ======================================================
 
     def init_ui(self):
+        """Build the dashboard shell and six pages, initially selecting telemetry."""
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
@@ -268,6 +269,7 @@ class MainWindow(QMainWindow):
     # ======================================================
 
     def create_sidebar(self):
+        """Build and return the sidebar with navigation and identity readouts."""
         sidebar = QFrame()
 
         sidebar.setObjectName(
@@ -410,6 +412,10 @@ class MainWindow(QMainWindow):
         self,
         text,
     ):
+        """Return a styled button linked to the page identified by its text.
+
+        Unrecognized text produces a button without a navigation action.
+        """
         button = QPushButton(
             text
         )
@@ -491,6 +497,10 @@ class MainWindow(QMainWindow):
         title,
         button,
     ):
+        """Select a page, uppercase its title, and highlight the supplied button.
+
+        Selecting page index 5 also activates keyboard-control focus.
+        """
         self.pages.setCurrentIndex(
             index
         )
@@ -550,6 +560,13 @@ class MainWindow(QMainWindow):
         self,
         raw_json,
     ):
+        """Validate and store JSON telemetry, then update dashboard readouts.
+
+        Refresh telemetry, flight-control, drone-view, and legacy diagnostics
+        labels from the accepted packet. Validation or update exceptions are
+        caught and displayed as system errors; earlier storage and UI changes
+        are not rolled back.
+        """
         try:
             packet = (
                 self.telemetry_service

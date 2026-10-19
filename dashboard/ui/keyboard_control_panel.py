@@ -40,6 +40,7 @@ class AttitudeGauge(QWidget):
     """Painted pitch/roll gauge with a visual ±15-degree envelope."""
 
     def __init__(self, parent=None):
+        """Initialize a level gauge with a 15-degree visual envelope."""
         super().__init__(parent)
         self.roll = 0.0
         self.pitch = 0.0
@@ -51,11 +52,17 @@ class AttitudeGauge(QWidget):
         )
 
     def set_attitude(self, roll, pitch):
+        """Store roll and pitch in degrees and request a repaint.
+
+        Float-conversion errors propagate. Stored angles are not clamped;
+        only the painted marker is limited to the visual envelope.
+        """
         self.roll = float(roll)
         self.pitch = float(pitch)
         self.update()
 
     def paintEvent(self, event):
+        """Paint angle readouts and a marker clamped to the visual tilt envelope."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.fillRect(self.rect(), QColor(PANEL_DARK))
@@ -174,6 +181,7 @@ class KeyboardControlPanel(QWidget):
     }
 
     def __init__(self, parent=None):
+        """Build input diagnostics and start the clock, leaving motion stopped."""
         super().__init__(parent)
 
         self.setObjectName("KeyboardControlPanel")
@@ -211,6 +219,7 @@ class KeyboardControlPanel(QWidget):
     # --------------------------------------------------------
 
     def apply_theme(self):
+        """Apply the keyboard diagnostics palette and component styles."""
         self.setStyleSheet("""
             QWidget#KeyboardControlPanel {
                 background: #111310;
@@ -250,6 +259,7 @@ class KeyboardControlPanel(QWidget):
         """)
 
     def build_ui(self):
+        """Build key indicators, the attitude gauge, timing readouts, and event log."""
         root = QVBoxLayout(self)
         root.setContentsMargins(12, 10, 12, 10)
         root.setSpacing(8)
@@ -382,11 +392,13 @@ class KeyboardControlPanel(QWidget):
         root.addWidget(log_card)
 
     def card(self, inset=False):
+        """Return an empty card frame, using the recessed style when inset is true."""
         frame = QFrame()
         frame.setObjectName("Inset" if inset else "Card")
         return frame
 
     def section_title(self, text, tag=None, tag_color=MINT):
+        """Return a heading layout with an optional colored status badge."""
         row = QHBoxLayout()
         label = QLabel(text)
         label.setWordWrap(True)
@@ -398,6 +410,7 @@ class KeyboardControlPanel(QWidget):
         return row
 
     def badge(self, text, color):
+        """Return a wrapping status label styled with the supplied color."""
         label = QLabel(text)
         label.setWordWrap(True)
         label.setStyleSheet(
@@ -409,6 +422,7 @@ class KeyboardControlPanel(QWidget):
         return label
 
     def build_primary_input(self):
+        """Return WASD key indicators and the instant-level button."""
         frame = self.card()
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(11, 10, 11, 10)
@@ -460,6 +474,7 @@ class KeyboardControlPanel(QWidget):
         return frame
 
     def build_numpad_input(self):
+        """Return numeric-key indicators, with unbound 7 and 9 disabled."""
         frame = self.card()
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(11, 10, 11, 10)
@@ -500,6 +515,7 @@ class KeyboardControlPanel(QWidget):
         return frame
 
     def make_keycap(self, key, action, disabled=False):
+        """Return a key-and-action indicator button without binding motion input."""
         button = QPushButton()
         button.setMinimumSize(58, 62)
         button.setSizePolicy(
@@ -527,6 +543,7 @@ class KeyboardControlPanel(QWidget):
         return button
 
     def build_attitude_card(self):
+        """Return the tilt gauge and target-angle and envelope-margin readouts."""
         frame = self.card()
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(11, 10, 11, 10)
@@ -554,6 +571,7 @@ class KeyboardControlPanel(QWidget):
         return frame
 
     def make_metric(self, layout, column, title, value, color):
+        """Add a metric tile at row zero in layout and return its value label."""
         frame = self.card(inset=True)
         inner = QVBoxLayout(frame)
         inner.setContentsMargins(8, 7, 8, 7)
@@ -575,6 +593,7 @@ class KeyboardControlPanel(QWidget):
         return value_label
 
     def build_safety_card(self):
+        """Return the visual-clamp notice and orientation-reset button."""
         frame = self.card()
         row = QHBoxLayout(frame)
         row.setContentsMargins(11, 9, 11, 9)
@@ -595,6 +614,7 @@ class KeyboardControlPanel(QWidget):
         return frame
 
     def build_diagnostics_card(self):
+        """Return key-event counts, interval timing, and interval-variation readouts."""
         frame = self.card()
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(11, 10, 11, 10)
@@ -647,6 +667,7 @@ class KeyboardControlPanel(QWidget):
         return frame
 
     def build_mapping_card(self):
+        """Return the key mapping and visual response-rate reference."""
         frame = self.card()
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(11, 10, 11, 10)
@@ -711,6 +732,7 @@ class KeyboardControlPanel(QWidget):
     # --------------------------------------------------------
 
     def activate_controls(self):
+        """Request keyboard focus and display the active input state."""
         self.setFocus(Qt.FocusReason.OtherFocusReason)
         self.footer_status.setText("●  KEYBOARD ACTIVE")
         self.footer_status.setStyleSheet(
@@ -719,6 +741,11 @@ class KeyboardControlPanel(QWidget):
         self.add_log("SYSTEM", "Keyboard focus activated")
 
     def keyPressEvent(self, event):
+        """Handle mapped motion keys, Space to level, and Escape to release keys.
+
+        Consume auto-repeat events without applying them. A newly held motion
+        key starts the motion timer; unhandled keys go to the base widget.
+        """
         key = event.key()
 
         if event.isAutoRepeat():
@@ -750,6 +777,11 @@ class KeyboardControlPanel(QWidget):
         super().keyPressEvent(event)
 
     def keyReleaseEvent(self, event):
+        """Release a held key and stop the motion timer when none remain.
+
+        Consume auto-repeat events without changing held keys; forward
+        unhandled releases to the base widget.
+        """
         key = event.key()
 
         if event.isAutoRepeat():
@@ -774,6 +806,12 @@ class KeyboardControlPanel(QWidget):
         super().focusOutEvent(event)
 
     def register_key_event(self, key, action):
+        """Count a key event and refresh timing diagnostics and its log entry.
+
+        key is a Qt key code; action labels the event. Intervals and their
+        population standard deviation use milliseconds and the latest 20
+        interval samples. Releases and control actions also count as events.
+        """
         now = time.monotonic()
         self.keystrokes += 1
 
@@ -803,9 +841,16 @@ class KeyboardControlPanel(QWidget):
         self.add_log(action, f"{key_name}  |  {self.describe_attitude()}")
 
     def describe_attitude(self):
+        """Return signed roll and pitch readouts in degrees."""
         return f"Roll {self.roll:+.1f}°  Pitch {self.pitch:+.1f}°"
 
     def update_motion(self):
+        """Advance visual tilt for held keys by one configured timer interval.
+
+        Each direction acts once even if both of its mapped keys are held;
+        opposing directions cancel. Clamp roll and pitch to MAX_TILT degrees
+        and refresh the display.
+        """
         step = (
             self.DEGREES_PER_SECOND
             * self.motion_timer.interval()
@@ -841,6 +886,7 @@ class KeyboardControlPanel(QWidget):
         self.refresh_view()
 
     def release_all_keys(self):
+        """Clear held keys and stop motion while preserving the current attitude."""
         had_keys = bool(self.pressed_keys)
         self.pressed_keys.clear()
         self.motion_timer.stop()
@@ -850,6 +896,7 @@ class KeyboardControlPanel(QWidget):
             self.add_log("SYSTEM", "All held keys released")
 
     def reset_orientation(self):
+        """Release all keys, stop motion, and zero the visual attitude."""
         self.release_all_keys()
         self.roll = 0.0
         self.pitch = 0.0
@@ -862,6 +909,7 @@ class KeyboardControlPanel(QWidget):
     # --------------------------------------------------------
 
     def refresh_view(self):
+        """Refresh the gauge, degree readouts, envelope margin, and held-key display."""
         self.gauge.set_attitude(self.roll, self.pitch)
 
         self.roll_value.setText(f"{self.roll:+.1f}°")
@@ -908,6 +956,7 @@ class KeyboardControlPanel(QWidget):
         )
 
     def update_clock(self):
+        """Display monotonic session uptime as minutes and seconds."""
         elapsed = int(time.monotonic() - self.started_at)
         minutes, seconds = divmod(elapsed, 60)
         self.uptime_label.setText(
@@ -915,6 +964,7 @@ class KeyboardControlPanel(QWidget):
         )
 
     def add_log(self, event_name, message):
+        """Append to the 100-line log and display the key-event count."""
         stamp = time.strftime("%H:%M:%S")
         self.event_log_lines.append(
             f"[{stamp}] {event_name:<12} {message}"
@@ -925,6 +975,7 @@ class KeyboardControlPanel(QWidget):
         )
 
     def clear_log(self):
+        """Clear displayed log entries while preserving the key-event count."""
         self.event_log_lines.clear()
         self.event_log.setText("Event log cleared.")
         self.log_count_label.setText(

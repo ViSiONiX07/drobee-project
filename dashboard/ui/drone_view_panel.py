@@ -25,6 +25,7 @@ class DroneCanvas(QWidget):
     CAMERA_MODES = ("ISO 3D", "TOP (Z)", "FRONT (X)", "SIDE (Y)")
 
     def __init__(self, parent=None):
+        """Initialize a level visual drone with all layers enabled and 100% throttle."""
         super().__init__(parent)
         self.roll = 0.0
         self.pitch = 0.0
@@ -49,16 +50,22 @@ class DroneCanvas(QWidget):
         self.update()
 
     def set_camera_mode(self, mode):
+        """Select a supported camera mode and repaint; ignore unknown modes."""
         if mode in self.CAMERA_MODES:
             self.camera_mode = mode
             self.update()
 
     def set_throttle(self, value):
+        """Set visual throttle to a percentage clamped to 0–200 and repaint.
+
+        Float-conversion errors propagate to the caller.
+        """
         self.throttle = max(0.0, min(200.0, float(value)))
         self.update()
 
     def set_layers(self, propellers=None, thrust=None,
                    clearance=None, grid=None):
+        """Update layer visibility and repaint, leaving None arguments unchanged."""
         if propellers is not None:
             self.show_propellers = bool(propellers)
         if thrust is not None:
@@ -70,10 +77,15 @@ class DroneCanvas(QWidget):
         self.update()
 
     def set_demo_phase(self, phase):
+        """Set the animation phase in seconds and repaint the propellers.
+
+        Float-conversion errors propagate to the caller.
+        """
         self.demo_phase = float(phase)
         self.update()
 
     def _rotate(self, x, y, z):
+        """Return a point rotated by the current roll, pitch, and yaw in degrees."""
         r = math.radians(self.roll)
         p = math.radians(self.pitch)
         ya = math.radians(self.yaw)
@@ -87,6 +99,11 @@ class DroneCanvas(QWidget):
         return x3, y3, z2
 
     def _screen(self, point, cx, cy, scale):
+        """Return a projected widget point for the current attitude and camera.
+
+        cx and cy locate the screen origin in pixels; scale controls the
+        projected size.
+        """
         x, y, z = self._rotate(*point)
 
         if self.camera_mode == "TOP (Z)":
@@ -108,6 +125,7 @@ class DroneCanvas(QWidget):
 
     def _text(self, painter, x, y, text, color=MUTED,
               size=9, bold=False):
+        """Draw styled text at pixel coordinates on the supplied painter."""
         painter.setPen(QColor(color))
         painter.setFont(QFont(
             "Consolas", size,
@@ -117,12 +135,14 @@ class DroneCanvas(QWidget):
 
     def _line(self, painter, a, b, color, width=1,
               style=Qt.PenStyle.SolidLine):
+        """Draw a styled screen-space line on the supplied painter."""
         painter.setPen(QPen(
             QColor(color), width, style, Qt.PenCapStyle.RoundCap
         ))
         painter.drawLine(a, b)
 
     def paintEvent(self, event):
+        """Paint the visual drone, enabled layers, attitude, and horizon inset."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.fillRect(self.rect(), QColor(PANEL_DARK))
@@ -254,6 +274,7 @@ class DroneCanvas(QWidget):
         painter.end()
 
     def _draw_horizon(self, painter):
+        """Draw a fixed horizon crosshair inset with the current roll readout."""
         x, y, width, height = 14, self.height() - 125, 165, 108
         painter.setPen(QPen(QColor(BORDER), 1))
         painter.setBrush(QBrush(QColor("#171a15")))
@@ -285,6 +306,7 @@ class DroneViewPanel(QWidget):
     """Drone geometry test bench with visual-only controls."""
 
     def __init__(self, parent=None):
+        """Build the visual test bench and prepare its initially stopped sweep timer."""
         super().__init__(parent)
         self.demo_running = False
         self.demo_time = 0.0
@@ -298,6 +320,7 @@ class DroneViewPanel(QWidget):
         self.update_orientation()
 
     def card(self):
+        """Return an empty frame styled as a test-bench card."""
         frame = QFrame()
         frame.setObjectName("Card")
         return frame
@@ -329,6 +352,7 @@ class DroneViewPanel(QWidget):
         return container
 
     def build_ui(self):
+        """Build the visualization canvas and connect the local test-bench controls."""
         self.setObjectName("DroneViewPanel")
         self.setStyleSheet("""
             QWidget#DroneViewPanel {
@@ -393,6 +417,7 @@ class DroneViewPanel(QWidget):
         root.addLayout(content, 1)
 
     def build_header(self):
+        """Return the test-bench header and create telemetry badge labels."""
         frame = self.card()
         row = QHBoxLayout(frame)
         row.setContentsMargins(12, 8, 12, 8)
@@ -438,6 +463,7 @@ class DroneViewPanel(QWidget):
         return frame
 
     def build_camera_card(self):
+        """Return camera controls and select the initial isometric canvas view."""
         frame = self.card()
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(10, 9, 10, 9)
@@ -463,6 +489,7 @@ class DroneViewPanel(QWidget):
         return frame
 
     def build_attitude_card(self):
+        """Return the roll, pitch, and yaw readout card."""
         frame = self.card()
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(10, 9, 10, 9)
@@ -486,6 +513,7 @@ class DroneViewPanel(QWidget):
         return frame
 
     def metric_tile(self, layout, column, title, initial, color):
+        """Add a metric tile at row zero in layout and return its value label."""
         frame = self.card()
         inner = QVBoxLayout(frame)
         inner.setContentsMargins(7, 7, 7, 7)
@@ -506,6 +534,7 @@ class DroneViewPanel(QWidget):
         return value_label
 
     def build_motor_card(self):
+        """Return illustrative motor-mount coordinates and pulse readouts."""
         frame = self.card()
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(10, 9, 10, 9)
@@ -559,6 +588,7 @@ class DroneViewPanel(QWidget):
         return frame
 
     def build_layers_card(self):
+        """Return initially enabled checkboxes connected to canvas layer updates."""
         frame = self.card()
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(10, 9, 10, 9)
@@ -583,6 +613,7 @@ class DroneViewPanel(QWidget):
         return frame
 
     def build_left_actions(self):
+        """Return the attitude-reset and gimbal-sweep controls."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -598,6 +629,7 @@ class DroneViewPanel(QWidget):
         return widget
 
     def build_override_card(self):
+        """Return sliders for visual attitude in degrees and throttle in percent."""
         frame = self.card()
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(10, 9, 10, 9)
@@ -639,6 +671,11 @@ class DroneViewPanel(QWidget):
 
     def add_override(self, parent_layout, title, minimum, maximum,
                      initial, left_text, center_text, right_text):
+        """Add an override card and return its slider and value label.
+
+        Use the supplied slider bounds and initial value. Endpoint and center
+        texts are display labels; callers connect subsequent value updates.
+        """
         frame = self.card()
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(8, 7, 8, 7)
@@ -673,6 +710,7 @@ class DroneViewPanel(QWidget):
         return slider, value_label
 
     def build_step_card(self):
+        """Return buttons for positive 15-degree roll and pitch steps."""
         frame = self.card()
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(10, 9, 10, 9)
@@ -690,6 +728,7 @@ class DroneViewPanel(QWidget):
         return frame
 
     def build_geometry_card(self):
+        """Return descriptive checks for the illustrative drone geometry."""
         frame = self.card()
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(10, 9, 10, 9)
@@ -718,6 +757,7 @@ class DroneViewPanel(QWidget):
         return frame
 
     def set_camera_mode(self, mode):
+        """Select the canvas camera and highlight the matching mode button."""
         self.canvas.set_camera_mode(mode)
 
         for name, button in self.camera_buttons.items():
@@ -732,6 +772,7 @@ class DroneViewPanel(QWidget):
             )
 
     def update_layers(self, *args):
+        """Apply layer-checkbox states to the canvas, ignoring signal arguments."""
         self.canvas.set_layers(
             propellers=self.propellers_check.isChecked(),
             thrust=self.thrust_check.isChecked(),
@@ -740,6 +781,10 @@ class DroneViewPanel(QWidget):
         )
 
     def update_orientation(self, value=None):
+        """Refresh degree readouts and canvas attitude from the sliders.
+
+        The optional value argument from slider signals is ignored.
+        """
         self.roll = float(self.roll_slider.value())
         self.pitch = float(self.pitch_slider.value())
         self.yaw = float(self.yaw_slider.value())
@@ -755,10 +800,15 @@ class DroneViewPanel(QWidget):
         self.canvas.set_orientation(self.roll, self.pitch, self.yaw)
 
     def update_throttle(self, value):
+        """Display visual throttle in percent and forward it to the canvas."""
         self.throttle_override_value.setText(f"{value}%")
         self.canvas.set_throttle(value)
 
     def apply_step(self, axis):
+        """Increase the roll slider by 15 degrees when axis is "roll".
+
+        Any other axis selects pitch. The selected value is capped at 45 degrees.
+        """
         if axis == "roll":
             self.roll_slider.setValue(
                 min(45, self.roll_slider.value() + 15)
@@ -769,6 +819,7 @@ class DroneViewPanel(QWidget):
             )
 
     def toggle_demo(self):
+        """Start or stop the visual gimbal sweep and update its button caption."""
         self.demo_running = not self.demo_running
 
         if self.demo_running:
@@ -779,6 +830,7 @@ class DroneViewPanel(QWidget):
             self.demo_timer.stop()
 
     def update_demo(self):
+        """Advance the synthetic attitude sweep by 0.04 seconds and repaint."""
         self.demo_time += 0.04
         self.roll_slider.setValue(
             int(20 * math.sin(self.demo_time * 1.2))
@@ -792,6 +844,7 @@ class DroneViewPanel(QWidget):
         self.canvas.set_demo_phase(self.demo_time)
 
     def reset_orientation(self):
+        """Stop the sweep, level the visual drone, and restore 100% visual throttle."""
         self.demo_timer.stop()
         self.demo_running = False
         self.demo_time = 0.0
@@ -807,7 +860,12 @@ class DroneViewPanel(QWidget):
         self.canvas.set_demo_phase(0.0)
 
     def update_telemetry(self, packet):
-        """Update battery display from a compatible telemetry packet."""
+        """Update battery display from a compatible telemetry packet.
+
+        Retain the packet even if its battery field is unusable. Missing or
+        invalid battery values raising AttributeError, TypeError, or ValueError
+        leave the displayed battery unchanged.
+        """
         self.telemetry_packet = packet
         try:
             self.battery_badge.setText(

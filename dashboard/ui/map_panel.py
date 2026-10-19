@@ -32,14 +32,17 @@ RED = "#df7669"
 
 
 def mono(size=9, bold=False):
+    """Return a Consolas font with size in points and optional bold weight."""
     return QFont("Consolas", size, QFont.Bold if bold else QFont.Normal)
 
 
 def ui_font(size=9, bold=False):
+    """Return an Arial font with size in points and optional bold weight."""
     return QFont("Arial", size, QFont.Bold if bold else QFont.Normal)
 
 
 def make_label(text, color=TEXT, size=9, bold=False, monospace=False):
+    """Return a colored label using the requested point size and font family."""
     label = QLabel(text)
     label.setFont(mono(size, bold) if monospace else ui_font(size, bold))
     label.setStyleSheet(f"color:{color}; background:transparent;")
@@ -47,6 +50,7 @@ def make_label(text, color=TEXT, size=9, bold=False, monospace=False):
 
 
 def make_button(text, primary=False):
+    """Return a styled action button, with copper emphasis when primary is true."""
     button = QPushButton(text)
     button.setCursor(Qt.PointingHandCursor)
     button.setMinimumHeight(31)
@@ -78,6 +82,7 @@ def make_button(text, primary=False):
 
 
 def make_section(title, tag=None):
+    """Return a section frame and its vertical layout with an optional header tag."""
     frame = QFrame()
     frame.setObjectName("mapSection")
     frame.setStyleSheet(f"""
@@ -108,6 +113,7 @@ def make_section(title, tag=None):
 
 
 def make_metric_card(title, value, detail="", value_color=TEXT):
+    """Return a metric card, its value label, and its detail label."""
     card = QFrame()
     card.setStyleSheet(f"""
         QFrame {{
@@ -143,6 +149,7 @@ class PointCloudView(QWidget):
     """Painted point-cloud viewport with camera, zoom and orbit controls."""
 
     def __init__(self, parent=None):
+        """Initialize an isometric viewport with a demo cloud and trail."""
         super().__init__(parent)
         self.setMinimumSize(300, 300)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -162,6 +169,7 @@ class PointCloudView(QWidget):
         self._generate_demo_points()
 
     def _generate_demo_points(self):
+        """Replace the cloud and path with repeatable demo data and request repaint."""
         rng = random.Random(42)
         points = []
 
@@ -214,7 +222,15 @@ class PointCloudView(QWidget):
         self.update()
 
     def set_points(self, points):
-        """Set actual XYZ points: [(x, y, z), ...] or (x, y, z, category)."""
+        """Replace the cloud with XYZ points and leave demo mode.
+
+        Accept [(x, y, z), ...] or [(x, y, z, category), ...].
+        Each point supplies x, y, z and an optional category, defaulting to
+        "sensor". Entries shorter than three items are skipped; extra items
+        beyond the category are ignored. Coordinates are converted to floats;
+        TypeError, ValueError, or OverflowError from conversion propagate.
+        The existing trail is retained.
+        """
         converted = []
         for point in points:
             if len(point) >= 3:
@@ -231,20 +247,28 @@ class PointCloudView(QWidget):
         self.update()
 
     def set_camera_mode(self, mode):
+        """Set the camera projection and request repaint.
+
+        Modes are "Isometric", "Top (Z)", "Side (X)", and "First-Person";
+        unknown names use the isometric projection.
+        """
         self.camera_mode = mode
         self.update()
 
     def set_trail_visible(self, visible):
+        """Set trail visibility and request repaint."""
         self.show_trail = visible
         self.update()
 
     def reset_view(self):
+        """Restore zero orbit yaw, unit zoom, and the isometric projection."""
         self.yaw = 0.0
         self.zoom = 1.0
         self.camera_mode = "Isometric"
         self.update()
 
     def _project(self, x, y, z):
+        """Return pixel coordinates after applying orbit, zoom, and projection."""
         width = max(1, self.width())
         height = max(1, self.height())
         cx, cy = width * 0.50, height * 0.55
@@ -267,10 +291,12 @@ class PointCloudView(QWidget):
         return QPointF(sx, sy)
 
     def _line3d(self, painter, a, b, color, width=1, style=Qt.SolidLine):
+        """Draw a styled line between projected XYZ endpoints using painter."""
         painter.setPen(QPen(QColor(color), width, style))
         painter.drawLine(self._project(*a), self._project(*b))
 
     def _draw_room(self, painter):
+        """Draw the illustrative room outline on the supplied painter."""
         extent = 2.0
         floor = [
             (-extent, -extent, 0),
@@ -290,6 +316,7 @@ class PointCloudView(QWidget):
             self._line3d(painter, floor[i], roof[i], "#252b24")
 
     def _draw_grid(self, painter):
+        """Draw the projected ground grid on the supplied painter."""
         value = -2.0
         while value <= 2.001:
             self._line3d(
@@ -301,6 +328,7 @@ class PointCloudView(QWidget):
             value += 0.25
 
     def _draw_axes(self, painter):
+        """Draw labeled XYZ reference axes on the supplied painter."""
         axes = [
             ((0.85, 0, 0), COPPER_LIGHT, "X"),
             ((0, 0.85, 0), MINT, "Y"),
@@ -314,6 +342,7 @@ class PointCloudView(QWidget):
             painter.drawText(int(point.x() + 4), int(point.y() - 3), label)
 
     def _draw_points(self, painter):
+        """Draw the cloud with category-specific colors and marker sizes."""
         for x, y, z, category in sorted(self.points, key=lambda p: p[2]):
             point = self._project(x, y, z)
 
@@ -331,6 +360,7 @@ class PointCloudView(QWidget):
             painter.drawEllipse(point, radius, radius)
 
     def _draw_path(self, painter):
+        """Draw the trail when enabled and at least two path points exist."""
         if not self.show_trail or len(self.path) < 2:
             return
 
@@ -347,6 +377,7 @@ class PointCloudView(QWidget):
             painter.drawEllipse(self._project(*self.path[i]), 2.2, 2.2)
 
     def _draw_drone(self, painter):
+        """Draw a fixed illustrative drone marker above the ground origin."""
         center = self._project(0, 0, 0.25)
         painter.setPen(QPen(QColor(COPPER_LIGHT), 1.6))
         painter.setBrush(QBrush(QColor("#22231d")))
@@ -361,6 +392,7 @@ class PointCloudView(QWidget):
         painter.drawLine(center, self._project(0, 0, 0))
 
     def paintEvent(self, event):
+        """Paint the point-cloud scene and indicate when the cloud is demo data."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing, True)
         painter.fillRect(self.rect(), QColor("#0c0f0c"))
@@ -396,6 +428,7 @@ class PointCloudView(QWidget):
         painter.end()
 
     def wheelEvent(self, event):
+        """Adjust zoom by a factor of 1.10, bounded to 0.45–2.5, and repaint."""
         self.zoom = (
             min(2.5, self.zoom * 1.10)
             if event.angleDelta().y() > 0
@@ -404,11 +437,13 @@ class PointCloudView(QWidget):
         self.update()
 
     def mousePressEvent(self, event):
+        """Begin an orbit drag on a left-button press."""
         if event.button() == Qt.LeftButton:
             self.dragging = True
             self.last_mouse = event.position()
 
     def mouseMoveEvent(self, event):
+        """During a drag, change orbit yaw by 0.008 radians per horizontal pixel."""
         if self.dragging and self.last_mouse is not None:
             delta = event.position() - self.last_mouse
             self.yaw += delta.x() * 0.008
@@ -416,6 +451,7 @@ class PointCloudView(QWidget):
             self.update()
 
     def mouseReleaseEvent(self, event):
+        """End an orbit drag on a left-button release."""
         if event.button() == Qt.LeftButton:
             self.dragging = False
             self.last_mouse = None
@@ -429,6 +465,7 @@ class MapPanel(QWidget):
     """Bee-Brain mapping page. Preserves common existing public methods."""
 
     def __init__(self, parent=None):
+        """Build an idle mapping console with a demo viewport and stopped scan timer."""
         super().__init__(parent)
 
         self.scanning = False
@@ -449,6 +486,7 @@ class MapPanel(QWidget):
         self._log("CALIB", "Waiting for mapping stream.")
 
     def init_ui(self):
+        """Build mapping readouts, the viewport, and local scan and export controls."""
         self.setObjectName("mapPanel")
         self.setStyleSheet(f"""
             QWidget#mapPanel {{ background:{BG}; color:{TEXT}; }}
@@ -526,6 +564,7 @@ class MapPanel(QWidget):
     # --------------------------------------------------------
 
     def _build_top_status(self):
+        """Return the mapping header row and create its voxel-size readout."""
         row = QHBoxLayout()
         row.setSpacing(9)
         row.addWidget(make_label(
@@ -544,6 +583,7 @@ class MapPanel(QWidget):
         return row
 
     def _build_slam_section(self):
+        """Return point-count readouts and illustrative registration statistics."""
         frame, layout = make_section("SLAM Registration", "CALIBRATED")
         layout.addWidget(make_label(
             "REGISTERED POINT COUNT", MUTED, 8, False, True
@@ -610,6 +650,7 @@ class MapPanel(QWidget):
         return frame
 
     def _build_sensor_section(self):
+        """Return sensor badges, an illustrative ToF grid, and velocity readouts."""
         frame, layout = make_section("Spatial Sensor Bus", "I2C / SPI")
 
         tof_row = QHBoxLayout()
@@ -675,6 +716,7 @@ class MapPanel(QWidget):
         return frame
 
     def _build_occupancy_section(self):
+        """Return preset buttons that select the displayed voxel size in millimeters."""
         frame, layout = make_section("Occupancy Grid Density")
         row = QHBoxLayout()
         row.setSpacing(4)
@@ -714,6 +756,7 @@ class MapPanel(QWidget):
     # --------------------------------------------------------
 
     def _build_camera_toolbar(self):
+        """Return camera selection, reset, and trail-visibility controls."""
         frame = QFrame()
         frame.setStyleSheet(f"""
             QFrame {{background:{PANEL};border:1px solid {BORDER};border-radius:4px;}}
@@ -770,6 +813,7 @@ class MapPanel(QWidget):
         return frame
 
     def _build_view_footer(self):
+        """Return the illustrative scale and XYZ direction legend."""
         frame = QFrame()
         frame.setStyleSheet(f"""
             QFrame {{background:{PANEL};border:1px solid {BORDER};border-radius:4px;}}
@@ -789,6 +833,7 @@ class MapPanel(QWidget):
     # --------------------------------------------------------
 
     def _build_scan_controls(self):
+        """Return scan controls, buffer actions, and elapsed-time readouts."""
         frame, layout = make_section("Scan Controller")
 
         # FIX: create the status label directly instead of trying to
@@ -838,6 +883,7 @@ class MapPanel(QWidget):
         return frame
 
     def _build_export_section(self):
+        """Return the export-format selector and display-only voxel-size slider."""
         frame, layout = make_section("Point Cloud Export")
         layout.addWidget(make_label("POINT CLOUD FORMAT", MUTED, 8, False, True))
 
@@ -870,6 +916,7 @@ class MapPanel(QWidget):
         return frame
 
     def _build_diagnostics_section(self):
+        """Return the diagnostic console and illustrative quality metrics."""
         frame, layout = make_section("Kernel Diagnostics", "STREAM: STDOUT")
         self.diagnostics = QPlainTextEdit()
         self.diagnostics.setReadOnly(True)
@@ -891,6 +938,7 @@ class MapPanel(QWidget):
         return frame
 
     def _build_bottom_status(self):
+        """Return scan-state, buffer-count, and clock readouts with demo anchor text."""
         frame = QFrame()
         frame.setStyleSheet(f"""
             QFrame {{background:{PANEL};border:1px solid {BORDER};border-radius:3px;}}
@@ -922,9 +970,14 @@ class MapPanel(QWidget):
     # --------------------------------------------------------
 
     def toggle_scan(self):
+        """Toggle the local demo scan timer and its status indicators."""
         self.stop_scan() if self.scanning else self.start_scan()
 
     def start_scan(self):
+        """Start demo counter updates and timing unless already scanning.
+
+        Existing counts are retained; the displayed point cloud is unchanged.
+        """
         if self.scanning:
             return
 
@@ -945,6 +998,7 @@ class MapPanel(QWidget):
         self._refresh_stats()
 
     def stop_scan(self):
+        """Stop demo counter updates and display idle status while retaining counts."""
         self.scanning = False
         self.scan_timer.stop()
 
@@ -961,6 +1015,7 @@ class MapPanel(QWidget):
         self._refresh_stats()
 
     def _scan_tick(self):
+        """Advance demo scan readouts and counts without changing cloud data."""
         if not self.scanning:
             return
 
@@ -995,14 +1050,24 @@ class MapPanel(QWidget):
             )
 
     def add_points(self, count):
-        """Compatibility method for existing callers that send point counts."""
+        """Add a count to current and total counters without adding cloud coordinates.
+
+        Convert count to an integer and clamp negative counts to zero.
+        Integer-conversion errors propagate to the caller.
+        """
         count = max(0, int(count))
         self.point_count += count
         self.total_point_count += count
         self._refresh_stats()
 
     def set_point_cloud(self, points):
-        """Set real XYZ data: [(x, y, z), ...] or [(x, y, z, category), ...]."""
+        """Set real XYZ data: [(x, y, z), ...] or [(x, y, z, category), ...].
+
+        Require a sized sequence and use PointCloudView.set_points conversion
+        rules, propagating its errors. The displayed count uses the supplied
+        sequence length, even for entries the viewport skips. Preserve
+        total_point_count if it already exceeds the supplied count.
+        """
         self.point_cloud.set_points(points)
         self.point_count = len(points)
         self.total_point_count = max(self.total_point_count, self.point_count)
@@ -1010,6 +1075,7 @@ class MapPanel(QWidget):
         self._log("SLAM", f"External point cloud updated: {len(points):,} points.")
 
     def clear_map(self):
+        """Stop scanning, reset counts and duration, and restore the demo cloud."""
         self.stop_scan()
         self.point_count = 0
         self.total_point_count = 0
@@ -1028,6 +1094,7 @@ class MapPanel(QWidget):
     # --------------------------------------------------------
 
     def set_camera_mode(self, mode):
+        """Apply a viewport projection and synchronize its button and caption."""
         self.point_cloud.set_camera_mode(mode)
 
         for name, button in self.camera_buttons.items():
@@ -1042,15 +1109,23 @@ class MapPanel(QWidget):
         self.camera_info.setText(labels.get(mode, f"Cam: {mode}"))
 
     def reset_view(self):
+        """Reset viewport orbit and zoom and select the isometric camera control."""
         self.point_cloud.reset_view()
         self.set_camera_mode("Isometric")
         self._log("VIEW", "Camera view reset.")
 
     def toggle_trail(self, checked):
+        """Set viewport trail visibility and synchronize the toggle caption."""
         self.point_cloud.set_trail_visible(checked)
         self.trail_button.setText("Trail: ON" if checked else "Trail: OFF")
 
     def set_voxel_size(self, value):
+        """Set the displayed voxel size in millimeters and synchronize controls.
+
+        This changes local UI state without filtering the cloud. The slider
+        clamps its own display to 5–50; voxel_mm retains the converted integer.
+        Integer-conversion errors propagate to the caller.
+        """
         self.voxel_mm = int(value)
         self.voxel_slider.blockSignals(True)
         self.voxel_slider.setValue(self.voxel_mm)
@@ -1066,6 +1141,7 @@ class MapPanel(QWidget):
         self._log("VOXEL", f"Voxel leaf size set to {self.voxel_mm} mm.")
 
     def _voxel_slider_changed(self, value):
+        """Update the displayed millimeter size and presets from the voxel slider."""
         self.voxel_mm = int(value)
         self.voxel_label.setText(f"{value} mm")
         self.voxel_top_label.setText(f"Voxel Grid: {value}mm Isotropic")
@@ -1089,6 +1165,7 @@ class MapPanel(QWidget):
             self._log("CALIB", "ToF sensor connection error.")
 
     def set_optical_flow_status(self, connected):
+        """Display ground-lock availability from the supplied optical-flow flag."""
         if connected:
             self.flow_badge.setText("● GROUND LOCK")
             self.flow_badge.setStyleSheet(
@@ -1101,6 +1178,10 @@ class MapPanel(QWidget):
             )
 
     def set_velocity(self, dx, dy):
+        """Display X and Y velocities in meters per second.
+
+        Float-conversion errors propagate to the caller.
+        """
         self.velocity_x_label.setText(f"{float(dx):+.2f} m/s")
         self.velocity_y_label.setText(f"{float(dy):+.2f} m/s")
 
@@ -1109,6 +1190,13 @@ class MapPanel(QWidget):
     # --------------------------------------------------------
 
     def export_ply(self):
+        """Prompt for a path and write the current cloud as ASCII PLY or XYZ.
+
+        Use the selected format, appending its extension when needed. Export
+        XYZ coordinates only, including demo points when displayed, and
+        overwrite the chosen file. Canceling writes nothing. OSError is caught
+        and reported in the panel; other errors propagate to the caller.
+        """
         is_xyz = self.format_combo.currentIndex() == 1
         extension = ".xyz" if is_xyz else ".ply"
         default_name = "bee_brain_map" + extension
@@ -1155,6 +1243,7 @@ class MapPanel(QWidget):
     # --------------------------------------------------------
 
     def _refresh_stats(self):
+        """Refresh counts and demo coverage, registration, and memory estimates."""
         self.point_count_label.setText(f"{self.point_count:,}")
         self.point_rate_label.setText(
             "+480 pts/sec" if self.scanning else "+0 pts/sec"
@@ -1184,6 +1273,7 @@ class MapPanel(QWidget):
         self.bottom_count_label.setText(f"BUFFER: {self.point_count:,} PTS")
 
     def _log(self, category, message):
+        """Append a timestamped event to history and the console when present."""
         self._log_sequence += 1
         timestamp = time.strftime("%H:%M:%S")
         line = (

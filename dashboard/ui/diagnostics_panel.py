@@ -36,6 +36,11 @@ class DiagnosticsPanel(QWidget):
     }
 
     def __init__(self, parent=None):
+        """Build diagnostics and start the clock and simulated-value timers.
+
+        Demo values refresh every 500 ms until update_telemetry is called;
+        the clock refreshes every second.
+        """
         super().__init__(parent)
 
         self._has_telemetry = False
@@ -65,6 +70,7 @@ class DiagnosticsPanel(QWidget):
     # ==================================================
 
     def _build_ui(self):
+        """Build the scrollable subsystem panels, footers, and legacy aliases."""
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
@@ -122,6 +128,7 @@ class DiagnosticsPanel(QWidget):
         self._build_legacy_aliases()
 
     def _build_top_bar(self):
+        """Return the header with initial simulated link and packet readouts."""
         frame = QFrame()
         frame.setObjectName("topBar")
 
@@ -157,6 +164,7 @@ class DiagnosticsPanel(QWidget):
         return frame
 
     def _build_readiness_bar(self):
+        """Return demo readiness indicators and the demo self-check button."""
         frame = QFrame()
         frame.setObjectName("readinessPanel")
 
@@ -206,6 +214,7 @@ class DiagnosticsPanel(QWidget):
     # ==================================================
 
     def _build_tof_panel(self):
+        """Return an illustrative ranging matrix and simulated ToF statistics."""
         panel = self._panel()
 
         panel.layout().addLayout(
@@ -323,6 +332,11 @@ class DiagnosticsPanel(QWidget):
         return panel
 
     def _tof_tone(self, distance):
+        """Return the heat style for a distance in millimeters.
+
+        Distances below 210 are hot, 210 to below 350 are normal, and 350 or
+        above are far.
+        """
         if distance < 210:
             return "heatHot"
         if distance < 350:
@@ -330,6 +344,7 @@ class DiagnosticsPanel(QWidget):
         return "heatFar"
 
     def _zone(self, left, right, tone):
+        """Return a distance-legend row styled with the supplied tone name."""
         frame = QFrame()
         frame.setObjectName(f"zone_{tone}")
 
@@ -350,6 +365,7 @@ class DiagnosticsPanel(QWidget):
     # ==================================================
 
     def _build_optical_panel(self):
+        """Return simulated optical-flow confidence and displacement readouts."""
         panel = self._panel()
 
         panel.layout().addLayout(
@@ -437,6 +453,7 @@ class DiagnosticsPanel(QWidget):
     # ==================================================
 
     def _build_power_panel(self):
+        """Return demo power and motor readouts and create legacy power labels."""
         panel = self._panel()
 
         panel.layout().addLayout(
@@ -529,6 +546,7 @@ class DiagnosticsPanel(QWidget):
     # ==================================================
 
     def _build_mcu_panel(self):
+        """Return illustrative MCU and radio-status readouts."""
         panel = self._panel()
 
         panel.layout().addLayout(
@@ -570,6 +588,7 @@ class DiagnosticsPanel(QWidget):
     # ==================================================
 
     def _build_log_panel(self):
+        """Return the subsystem event display with level filters and clear action."""
         panel = self._panel()
         panel.setMinimumHeight(240)
 
@@ -625,6 +644,7 @@ class DiagnosticsPanel(QWidget):
         return panel
 
     def _set_log_filter(self, value):
+        """Select an exact event level, or ALL, and refresh the filtered display."""
         self.log_filter = value
 
         for name, button in self.log_filter_buttons.items():
@@ -637,12 +657,14 @@ class DiagnosticsPanel(QWidget):
         self._render_log()
 
     def _append_event(self, level, message):
+        """Append a timestamped event, retaining the latest 1000, and refresh."""
         timestamp = datetime.now().strftime("%H:%M:%S")
         self._log_entries.append((timestamp, level, message))
         self._log_entries = self._log_entries[-1000:]
         self._render_log()
 
     def _render_log(self):
+        """Display the latest 80 events matching the filter and total buffer size."""
         entries = self._log_entries
 
         if self.log_filter != "ALL":
@@ -668,6 +690,7 @@ class DiagnosticsPanel(QWidget):
     # ==================================================
 
     def _build_daemon_strip(self):
+        """Return demo monitor, protocol, and unverified bus-status indicators."""
         frame = QFrame()
         frame.setObjectName("daemonStrip")
 
@@ -694,6 +717,7 @@ class DiagnosticsPanel(QWidget):
         return frame
 
     def _build_bottom_bar(self):
+        """Return the footer with demo flight, sensor, and clock readouts."""
         frame = QFrame()
         frame.setObjectName("bottomBar")
 
@@ -734,6 +758,7 @@ class DiagnosticsPanel(QWidget):
     # ==================================================
 
     def _panel(self):
+        """Return an empty styled panel with a vertical content layout."""
         frame = QFrame()
         frame.setObjectName("panel")
 
@@ -744,6 +769,7 @@ class DiagnosticsPanel(QWidget):
         return frame
 
     def _panel_header(self, title, badge_text, tone):
+        """Return a title row with a badge styled by the supplied tone name."""
         row = QHBoxLayout()
 
         label = QLabel(title)
@@ -758,6 +784,7 @@ class DiagnosticsPanel(QWidget):
         return row
 
     def _badge(self, text, tone):
+        """Return a centered status badge styled by the supplied tone name."""
         label = QLabel(text)
         label.setObjectName(f"badge_{tone}")
         label.setAlignment(Qt.AlignCenter)
@@ -765,6 +792,7 @@ class DiagnosticsPanel(QWidget):
         return label
 
     def _stat_cell(self, title, value):
+        """Return a compact panel containing a title and wrapping value label."""
         frame = QFrame()
         frame.setObjectName("statCell")
 
@@ -784,6 +812,7 @@ class DiagnosticsPanel(QWidget):
         return frame
 
     def _small_value(self, title, value):
+        """Return a vertical layout containing a heading and highlighted value."""
         column = QVBoxLayout()
 
         heading = QLabel(title)
@@ -802,6 +831,11 @@ class DiagnosticsPanel(QWidget):
     # ==================================================
 
     def _build_legacy_aliases(self):
+        """Expose labels expected by legacy application callers.
+
+        Some names alias visible readouts; sensor, packet-count, and power
+        compatibility labels are separate from the visible panel contents.
+        """
         # These labels are attached to visible widgets so legacy
         # code can safely call setText() on them.
         self.system_status = self.integrity_value
@@ -826,6 +860,11 @@ class DiagnosticsPanel(QWidget):
     # ==================================================
 
     def _update_demo_values(self):
+        """Advance simulated sensor, power, motor, and radio readouts.
+
+        Do nothing once update_telemetry has selected packet-driven updates.
+        Unparseable demo motor temperatures fall back to 35 degrees Celsius.
+        """
         if self._has_telemetry:
             return
 
@@ -961,7 +1000,13 @@ class DiagnosticsPanel(QWidget):
     # ==================================================
 
     def update_telemetry(self, packet):
-        """Accept packets from the existing application, if provided."""
+        """Update packet readouts from a dictionary or an attribute-based object.
+
+        Disable further demo updates, including when fields are missing.
+        Missing link and sensor flags default to false; absent battery data
+        leaves its readouts unchanged. Up to four list or tuple PWM entries
+        replace the motor readouts. Invalid battery formatting errors propagate.
+        """
 
         # Stop animation so it cannot overwrite packet-driven updates.
         self._has_telemetry = True
@@ -969,6 +1014,7 @@ class DiagnosticsPanel(QWidget):
             self.demo_timer.stop()
 
         def get(source, key, default=None):
+            """Read a dictionary key or object attribute, using default if absent."""
             if isinstance(source, dict):
                 return source.get(key, default)
             return getattr(source, key, default)
@@ -1017,6 +1063,7 @@ class DiagnosticsPanel(QWidget):
     # ==================================================
 
     def run_system_check(self):
+        """Display completion of a demo self-check without testing hardware."""
         self._append_event(
             "INFO",
             "Demo self-check completed; physical hardware not tested.",
@@ -1026,11 +1073,13 @@ class DiagnosticsPanel(QWidget):
         )
 
     def clear_status(self):
+        """Clear the event buffer and acknowledge it in the monitor status."""
         self._log_entries.clear()
         self._render_log()
         self.daemon_status.setText("Log buffer cleared.")
 
     def _update_clock(self):
+        """Refresh the clock label with local time when the label exists."""
         if hasattr(self, "clock_label"):
             self.clock_label.setText(
                 f"SYS_CLK: {datetime.now().strftime('%H:%M:%S')}"
@@ -1041,6 +1090,7 @@ class DiagnosticsPanel(QWidget):
     # ==================================================
 
     def _apply_styles(self):
+        """Apply the diagnostics palette and component styles to this panel."""
         c = self.C
 
         self.setStyleSheet(

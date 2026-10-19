@@ -30,6 +30,7 @@ class ControlPanel(QWidget):
     RED = "#D85A54"
 
     def __init__(self, parent=None):
+        """Build the flight-control page with disarmed local simulation state."""
         super().__init__(parent)
 
         self.is_armed = False
@@ -40,6 +41,7 @@ class ControlPanel(QWidget):
         self.init_ui()
 
     def init_ui(self):
+        """Build and connect the scrollable controls, readouts, and status display."""
         self.setObjectName("ControlPanelRoot")
         self.setStyleSheet(f"""
             QWidget#ControlPanelRoot {{
@@ -244,6 +246,7 @@ class ControlPanel(QWidget):
     # ---------------------------------------------------------
 
     def build_left_column(self):
+        """Return the safety, flight-telemetry, and placeholder-routine column."""
         column = QWidget()
         layout = QVBoxLayout(column)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -376,6 +379,7 @@ class ControlPanel(QWidget):
     # ---------------------------------------------------------
 
     def build_center_column(self):
+        """Return the motor-command, average-PWM, and attitude-readout column."""
         column = QWidget()
         layout = QVBoxLayout(column)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -511,6 +515,7 @@ class ControlPanel(QWidget):
     # ---------------------------------------------------------
 
     def build_right_column(self):
+        """Return the local flight-mode, trim, and preview-limit controls."""
         column = QWidget()
         layout = QVBoxLayout(column)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -618,10 +623,17 @@ class ControlPanel(QWidget):
     # ---------------------------------------------------------
 
     def resizeEvent(self, event):
+        """Reflow the control columns after the widget is resized."""
         super().resizeEvent(event)
         self.update_responsive_layout()
 
     def update_responsive_layout(self):
+        """Reflow columns to fit the scroll viewport width in pixels.
+
+        Use three columns at 1180 or wider, two above one at 780–1179, and a
+        vertical stack below 780. Do nothing before layout initialization or
+        when the layout mode has not changed.
+        """
         if not hasattr(self, "columns_layout"):
             return
 
@@ -682,6 +694,7 @@ class ControlPanel(QWidget):
     # ---------------------------------------------------------
 
     def card(self, inner=False):
+        """Return an empty card frame, using the inset style when inner is true."""
         frame = QFrame()
         frame.setObjectName(
             "InnerPanel" if inner else "Card"
@@ -694,18 +707,21 @@ class ControlPanel(QWidget):
         return frame
 
     def section_title(self, text):
+        """Return a wrapping label styled as a section heading."""
         label = QLabel(text)
         label.setObjectName("SectionTitle")
         label.setWordWrap(True)
         return label
 
     def muted_label(self, text):
+        """Return a wrapping label styled as secondary text."""
         label = QLabel(text)
         label.setObjectName("SmallMuted")
         label.setWordWrap(True)
         return label
 
     def value_label(self, text, color=None):
+        """Return a wrapping value label, optionally bold in the supplied color."""
         label = QLabel(text)
         label.setWordWrap(True)
         if color:
@@ -715,6 +731,7 @@ class ControlPanel(QWidget):
         return label
 
     def pair(self, title, value):
+        """Return a row pairing a title with the supplied value widget on the right."""
         wrapper = QWidget()
         wrapper.setMinimumWidth(0)
 
@@ -728,6 +745,12 @@ class ControlPanel(QWidget):
         return wrapper
 
     def make_trim_slider(self, parent_layout, title, value_label):
+        """Add a trim control to parent_layout and return its slider.
+
+        Slider values are tenths of a degree, ranging from -50 to 50, initially
+        zero. The supplied value_label is added below the slider; callers
+        connect its text updates.
+        """
         parent_layout.addWidget(self.section_title(title))
 
         row = QHBoxLayout()
@@ -870,6 +893,7 @@ class ControlPanel(QWidget):
             self.arm()
 
     def arm(self):
+        """Mark the local simulation armed and refresh its status and button."""
         self.is_armed = True
         self.arm_status.setText("ARMED (SIM)")
         self.arm_status.setStyleSheet(
@@ -889,6 +913,7 @@ class ControlPanel(QWidget):
         )
 
     def disarm(self):
+        """Mark the local simulation disarmed and refresh its status and button."""
         self.is_armed = False
         self.arm_status.setText("DISARMED")
         self.arm_status.setStyleSheet(
@@ -908,18 +933,24 @@ class ControlPanel(QWidget):
         )
 
     def set_flight_mode(self, mode):
+        """Store the selected local mode and show it in the command status."""
         self.current_mode = mode
         self.command_status.setText(
             f"Mode selected: {mode} — UI only"
         )
 
     def set_attitude(self, roll, pitch, yaw):
+        """Display roll, pitch, and yaw in degrees without issuing commands."""
         # Retain the existing method signature for compatibility.
         self.roll_value.setText(f"{roll:.2f}°")
         self.pitch_value.setText(f"{pitch:.2f}°")
         self.yaw_value.setText(f"{yaw:.2f}°")
 
     def set_throttle(self, value):
+        """Display a PWM command as a percentage after clamping it to 0–255.
+
+        Convert value to an integer; conversion errors propagate to the caller.
+        """
         # Compatibility method for existing callers.
         value = max(0, min(255, int(value)))
         self.throttle_bar.setValue(value)
@@ -928,6 +959,7 @@ class ControlPanel(QWidget):
         )
 
     def set_failsafe(self, active):
+        """Store and display the local failsafe flag without issuing commands."""
         self.failsafe_active = active
         if active:
             self.failsafe_status.setText("ACTIVE")
@@ -941,10 +973,12 @@ class ControlPanel(QWidget):
             )
 
     def reset_trims(self):
+        """Set both local trim sliders to zero."""
         self.pitch_slider.setValue(0)
         self.roll_slider.setValue(0)
 
     def show_mock_saved(self):
+        """Display a session-only save acknowledgment without persisting trims."""
         self.command_status.setText(
             "Trim values saved in the UI session only."
         )

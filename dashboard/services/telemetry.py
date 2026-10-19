@@ -148,6 +148,11 @@ class MotorTelemetry(BaseModel):
     @field_validator("pwm")
     @classmethod
     def validate_pwm(cls, values: list[int]) -> list[int]:
+        """Return PWM values unchanged if each is in the inclusive range 0–65535.
+
+        Raise ValueError for an out-of-range value; Pydantic includes this
+        failure in its model ValidationError.
+        """
         if any(value < 0 or value > 65535 for value in values):
             raise ValueError("Motor PWM values must be between 0 and 65535.")
         return values
@@ -232,6 +237,11 @@ class TelemetryPacket(BaseModel):
     @field_validator("motor_pwm")
     @classmethod
     def validate_legacy_pwm(cls, values: list[int]) -> list[int]:
+        """Return four PWM values unchanged when each is in the range 0–65535.
+
+        Raise ValueError for a different count or an out-of-range value;
+        Pydantic includes these failures in its model ValidationError.
+        """
         if len(values) != 4:
             raise ValueError("Exactly four motor PWM values are required.")
 
@@ -249,6 +259,11 @@ class TelemetryService:
     """Validate, store, and expose recent telemetry packets."""
 
     def __init__(self, maxlen: int = 500) -> None:
+        """Create a history retaining at most maxlen valid packets.
+
+        Raise ValueError if maxlen is less than one. Once full, the history
+        discards the oldest packet when a new valid packet arrives.
+        """
         if maxlen < 1:
             raise ValueError("maxlen must be at least 1.")
 
@@ -258,10 +273,13 @@ class TelemetryService:
         self._last_received_monotonic: float | None = None
 
     def add_packet(self, raw_json: str) -> TelemetryPacket:
-        """
-        Validate JSON, store the packet, and return it.
+        """Validate JSON, store the packet, and return it.
 
-        Invalid packets are not stored.
+        Raise ValueError for a non-string input, malformed JSON, or model
+        validation failure, preserving the validation exception as its cause.
+        Rejected packets increment the error count without changing history
+        or the last valid receipt time. Accepted packets increment the received
+        count and evict the oldest entry when history is full.
         """
 
         if not isinstance(raw_json, str):
@@ -285,7 +303,7 @@ class TelemetryService:
         return packet
 
     def get_latest(self) -> TelemetryPacket | None:
-        """Return the most recent valid packet."""
+        """Return the most recent valid packet, or None when history is empty."""
 
         return self._history[-1] if self._history else None
 
@@ -295,7 +313,13 @@ class TelemetryService:
         return list(self._history)
 
     def get_stats(self) -> dict[str, Any]:
-        """Return telemetry-service statistics."""
+        """Return history size and capacity, packet counters, and receipt age.
+
+        received_count counts accepted packets and validation_errors counts
+        rejected inputs since construction, even after history is cleared.
+        last_packet_age_s is elapsed monotonic time in seconds since the last
+        accepted packet, or None if no packet has been accepted.
+        """
 
         age_s = None
 

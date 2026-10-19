@@ -38,6 +38,7 @@ from dashboard.ui.theme import Palette, get_mono_font, get_ui_font
 # ============================================================
 
 def card_frame():
+    """Return an empty frame styled as a telemetry card."""
     frame = QFrame()
     frame.setObjectName("telemetryCard")
     frame.setStyleSheet(
@@ -59,6 +60,7 @@ def styled_label(
     alignment=Qt.AlignmentFlag.AlignLeft
     | Qt.AlignmentFlag.AlignVCenter,
 ):
+    """Return an aligned label, defaulting to the UI font and primary text color."""
     label = QLabel(text)
     label.setFont(font or get_ui_font(9))
     label.setAlignment(alignment)
@@ -69,6 +71,7 @@ def styled_label(
 
 
 def card_header(title, badge):
+    """Return a title-and-badge header widget and its badge label."""
     header = QWidget()
     header.setFixedHeight(30)
 
@@ -104,6 +107,7 @@ def card_header(title, badge):
 
 
 def card_layout(widget):
+    """Attach and return the standard telemetry-card vertical layout."""
     layout = QVBoxLayout(widget)
     layout.setContentsMargins(0, 0, 0, 8)
     layout.setSpacing(5)
@@ -116,6 +120,7 @@ def card_layout(widget):
 
 class AltitudeCard(QFrame):
     def __init__(self, parent=None):
+        """Build altitude, target, and vertical-velocity placeholder readouts."""
         super().__init__(parent)
         self.setStyleSheet(card_frame().styleSheet())
         self.setMinimumHeight(150)
@@ -173,17 +178,24 @@ class AltitudeCard(QFrame):
 
 class DriftRadar(QWidget):
     def __init__(self, parent=None):
+        """Initialize a centered drift marker."""
         super().__init__(parent)
         self.setMinimumSize(78, 78)
         self.drift_x = 0.0
         self.drift_y = 0.0
 
     def set_drift(self, x, y):
+        """Store drift components in their incoming units and request repaint.
+
+        Float-conversion errors propagate; only the painted position is
+        limited to the display corridor.
+        """
         self.drift_x = float(x)
         self.drift_y = float(y)
         self.update()
 
     def paintEvent(self, event):
+        """Paint a drift marker with each axis saturated at a magnitude of 0.20."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
@@ -230,6 +242,7 @@ class DriftRadar(QWidget):
 
 class DriftCard(QFrame):
     def __init__(self, parent=None):
+        """Build the drift radar and its displacement and corridor-status readouts."""
         super().__init__(parent)
         self.setStyleSheet(card_frame().styleSheet())
         self.setMinimumHeight(150)
@@ -273,6 +286,7 @@ class DriftCard(QFrame):
 
 class BatteryCard(QFrame):
     def __init__(self, parent=None):
+        """Build voltage readouts and an initially empty visual battery bar."""
         super().__init__(parent)
         self.setStyleSheet(card_frame().styleSheet())
         self.setMinimumHeight(150)
@@ -330,10 +344,12 @@ class BatteryCard(QFrame):
         self._fraction = 0.0
 
     def resizeEvent(self, event):
+        """Resize the battery fill after the card is resized."""
         super().resizeEvent(event)
         self._resize_fill()
 
     def _resize_fill(self):
+        """Fit the battery fill to the available bar area using the stored fraction."""
         width = max(0, self.bar.width() - 2)
         height = max(0, self.bar.height() - 2)
         self.fill.setGeometry(
@@ -341,6 +357,12 @@ class BatteryCard(QFrame):
         )
 
     def update_voltage(self, voltage):
+        """Display voltage in volts with status thresholds and a visual fill.
+
+        Values above 3.7 are healthy, above 3.4 through 3.7 are warnings, and
+        3.4 or below are critical. Fill scales linearly from empty at 3.0 V to
+        full at 4.2 V, clamped at the ends; it is not calibrated state of charge.
+        """
         self.value_label.setText(f"{voltage:.2f}")
 
         if voltage > 3.7:
@@ -374,6 +396,7 @@ class BatteryCard(QFrame):
 
 class CommsCard(QFrame):
     def __init__(self, parent=None):
+        """Build link status with placeholders for unavailable communication metrics."""
         super().__init__(parent)
         self.setStyleSheet(card_frame().styleSheet())
         self.setMinimumHeight(150)
@@ -420,6 +443,7 @@ class CommsCard(QFrame):
         outer.addLayout(body)
 
     def update_link(self, connected):
+        """Display connected or disconnected status with the corresponding color."""
         if connected:
             self.status_label.setText("● CONNECTED")
             color = Palette.ACCENT_SAGE
@@ -454,6 +478,12 @@ class StaticLineChart(QWidget):
         parent=None,
         y_min=None,
     ):
+        """Initialize up to two sample series and their vertical display range.
+
+        When y_min is omitted it defaults to -y_max. y_label_fmt formats axis
+        values; legend supplies (label, color) pairs. Samples are evenly spaced
+        across the plot, without a timestamp axis.
+        """
         super().__init__(parent)
 
         self.series_a = list(series_a or [])
@@ -474,6 +504,7 @@ class StaticLineChart(QWidget):
         )
 
     def set_series(self, series_a, series_b=None):
+        """Copy samples and repaint, preserving the second series when omitted."""
         self.series_a = list(series_a)
 
         if series_b is not None:
@@ -482,6 +513,11 @@ class StaticLineChart(QWidget):
         self.update()
 
     def paintEvent(self, event):
+        """Paint series within the configured range, grid, and legend.
+
+        Draw no chart when the plot area is too small or y_max is not greater
+        than y_min. Values outside the range are drawn at its nearest edge.
+        """
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
@@ -536,6 +572,7 @@ class StaticLineChart(QWidget):
             )
 
         def draw_series(values, color):
+            """Draw sample segments with positions clamped to the y range."""
             if not values:
                 return
 
@@ -587,6 +624,7 @@ class StaticLineChart(QWidget):
 
 class SensorBusTable(QFrame):
     def __init__(self, parent=None):
+        """Build sensor status rows and unavailable-sensor placeholders."""
         super().__init__(parent)
         self.setStyleSheet(card_frame().styleSheet())
 
@@ -651,6 +689,7 @@ class SensorBusTable(QFrame):
         outer.addLayout(grid)
 
     def update_states(self, tof_ok, flow_ok):
+        """Display nominal or error states for the ToF and optical-flow flags."""
         for key, is_ok in (
             ("tof", tof_ok),
             ("flow", flow_ok),
@@ -673,6 +712,7 @@ class SensorBusTable(QFrame):
 
 class TelemetryPanel(QWidget):
     def __init__(self, parent=None):
+        """Build telemetry cards and charts with 100-sample rolling buffers."""
         super().__init__(parent)
 
         self.altitude_history = deque(maxlen=100)
@@ -793,7 +833,14 @@ class TelemetryPanel(QWidget):
     # --------------------------------------------------------
 
     def update_telemetry(self, packet):
-        """Update cards and charts whenever a validated packet arrives."""
+        """Update cards and charts whenever a validated packet arrives.
+
+        Convert altitude from centimeters to meters and estimate vertical
+        velocity in meters per second after the first packet, using local
+        receipt intervals with a 1 ms minimum. Retain the latest 100 altitude
+        and synthetic angular-rate samples; angular rates are demo values,
+        regardless of any extended IMU fields in the packet.
+        """
 
         now = __import__("time").monotonic()
 
