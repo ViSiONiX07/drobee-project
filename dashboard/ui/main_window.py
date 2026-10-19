@@ -112,37 +112,41 @@ class MainWindow(QMainWindow):
 
         header = QFrame()
         header.setObjectName("header")
+        header.setFixedHeight(58)
 
-        header.setFixedHeight(70)
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(14, 0, 14, 0)
+        header_layout.setSpacing(8)
 
-        header_layout = QHBoxLayout(
-            header
-        )
+        breadcrumb = QLabel("BREADCRUMB  /")
+        breadcrumb.setObjectName("headerBreadcrumb")
+        header_layout.addWidget(breadcrumb)
 
-        header_layout.setContentsMargins(
-            30,
-            0,
-            30,
-            0,
-        )
+        self.page_title = QLabel("TELEMETRY")
+        self.page_title.setObjectName("pageTitle")
+        self.page_title.setMinimumWidth(132)
+        header_layout.addWidget(self.page_title)
 
-        self.page_title = QLabel(
-            "TELEMETRY"
-        )
+        header_layout.addStretch(1)
 
-        self.page_title.setObjectName(
-            "pageTitle"
-        )
+        self.header_link_status = QLabel("● LINK: SIMULATED")
+        self.header_link_status.setObjectName("headerReadout")
+        self.header_link_status.setProperty("state", "nominal")
+        header_layout.addWidget(self.header_link_status)
 
-        header_layout.addWidget(
-            self.page_title
-        )
+        self.header_mode_status = QLabel("SIMULATED STREAM")
+        self.header_mode_status.setObjectName("headerMode")
+        header_layout.addWidget(self.header_mode_status)
 
-        header_layout.addStretch()
+        self.header_rate_status = QLabel("RATE: 10 Hz")
+        self.header_rate_status.setObjectName("headerReadout")
+        header_layout.addWidget(self.header_rate_status)
 
-        content_layout.addWidget(
-            header
-        )
+        self.header_rtt_status = QLabel("RTT: -- ms")
+        self.header_rtt_status.setObjectName("headerReadout")
+        header_layout.addWidget(self.header_rtt_status)
+
+        content_layout.addWidget(header)
 
         # --------------------------------------------------
         # STACKED PAGES
@@ -205,44 +209,41 @@ class MainWindow(QMainWindow):
         status_frame = QFrame()
         status_frame.setObjectName("statusBar")
 
-        status_frame.setFixedHeight(35)
+        status_frame.setFixedHeight(32)
 
         status_layout = QHBoxLayout(
             status_frame
         )
 
         status_layout.setContentsMargins(
-            25,
+            12,
             0,
-            25,
+            12,
             0,
         )
 
-        self.system_status = QLabel(
-            "● SYSTEM ONLINE"
-        )
+        self.system_status = QLabel("● ARMED [SIMULATION READY]")
+        self.system_status.setObjectName("statusPrimary")
+        self.system_status.setStyleSheet("color: #8CB7A1;")
+        status_layout.addWidget(self.system_status)
 
-        self.system_status.setStyleSheet(
-            "color: #8CB7A1;"
-        )
+        self.status_battery = QLabel("BATT: SIMULATED")
+        self.status_battery.setObjectName("statusMetric")
+        status_layout.addWidget(self.status_battery)
 
-        status_layout.addWidget(
-            self.system_status
-        )
+        self.status_tof = QLabel("TOF/OF: SIMULATED")
+        self.status_tof.setObjectName("statusMetric")
+        status_layout.addWidget(self.status_tof)
 
         status_layout.addStretch()
 
-        self.data_status = QLabel(
-            "FAKE TELEMETRY"
-        )
+        self.data_status = QLabel("DATA SOURCE: FAKE TELEMETRY")
+        self.data_status.setObjectName("statusMetric")
+        status_layout.addWidget(self.data_status)
 
-        self.data_status.setStyleSheet(
-            "color: #898F80;"
-        )
-
-        status_layout.addWidget(
-            self.data_status
-        )
+        self.status_failsafe = QLabel("FAIL-SAFE: SIMULATION ONLY")
+        self.status_failsafe.setObjectName("statusWarning")
+        status_layout.addWidget(self.status_failsafe)
 
         content_layout.addWidget(
             status_frame
@@ -273,30 +274,26 @@ class MainWindow(QMainWindow):
             "sidebar"
         )
 
-        sidebar.setFixedWidth(
-            220
-        )
+        sidebar.setFixedWidth(248)
 
         sidebar_layout = QVBoxLayout(
             sidebar
         )
 
         sidebar_layout.setContentsMargins(
-            15,
-            20,
-            15,
-            15,
+            12,
+            14,
+            12,
+            12,
         )
 
-        sidebar_layout.setSpacing(10)
+        sidebar_layout.setSpacing(6)
 
         # --------------------------------------------------
         # LOGO
         # --------------------------------------------------
 
-        logo = QLabel(
-            "🛸 BEE-BRAIN"
-        )
+        logo = QLabel("⌘  BEE-BRAIN GCS")
 
         logo.setObjectName(
             "logo"
@@ -304,7 +301,7 @@ class MainWindow(QMainWindow):
 
         logo.setFont(
             self.create_font(
-                20,
+                16,
                 True,
             )
         )
@@ -314,7 +311,7 @@ class MainWindow(QMainWindow):
         )
 
         subtitle = QLabel(
-            "AUTONOMOUS ROBOTICS"
+            "Micro-UAV Research Lab v2.4"
         )
 
         subtitle.setObjectName(
@@ -325,9 +322,11 @@ class MainWindow(QMainWindow):
             subtitle
         )
 
-        sidebar_layout.addSpacing(
-            35
-        )
+        subsystem_label = QLabel("SUBSYSTEMS")
+        subsystem_label.setObjectName("sidebarSectionLabel")
+        sidebar_layout.addSpacing(12)
+        sidebar_layout.addWidget(subsystem_label)
+        sidebar_layout.addSpacing(4)
 
         # --------------------------------------------------
         # NAVIGATION BUTTONS
@@ -383,6 +382,24 @@ class MainWindow(QMainWindow):
 
         sidebar_layout.addStretch()
 
+        # Persistent hardware identity block, matching the Stitch shell.
+        sidebar_footer = QFrame()
+        sidebar_footer.setObjectName("sidebarFooter")
+        footer_layout = QVBoxLayout(sidebar_footer)
+        footer_layout.setContentsMargins(8, 10, 8, 8)
+        footer_layout.setSpacing(3)
+
+        node_label = QLabel("NODE ID:  BEE-UAV_0x7A")
+        node_label.setObjectName("sidebarFooterValue")
+        firmware_label = QLabel("FIRMWARE:  SIMULATED")
+        firmware_label.setObjectName("sidebarFooterValue")
+        uptime_label = QLabel("UPTIME:  TELEMETRY ACTIVE")
+        uptime_label.setObjectName("sidebarFooterValue")
+        footer_layout.addWidget(node_label)
+        footer_layout.addWidget(firmware_label)
+        footer_layout.addWidget(uptime_label)
+        sidebar_layout.addWidget(sidebar_footer)
+
         return sidebar
 
     # ======================================================
@@ -402,7 +419,7 @@ class MainWindow(QMainWindow):
         )
 
         button.setMinimumHeight(
-            55
+            36
         )
 
         button.setCursor(
@@ -478,9 +495,7 @@ class MainWindow(QMainWindow):
             index
         )
 
-        self.page_title.setText(
-            title
-        )
+        self.page_title.setText(title.upper())
 
         self.update_navigation(
             button
@@ -541,10 +556,28 @@ class MainWindow(QMainWindow):
                 .add_packet(raw_json)
             )
 
+            # Keep shell readouts synchronized with the existing telemetry packet.
+            link_label = "● LINK: CONNECTED" if packet.link_ok else "● LINK: DISCONNECTED"
+            self.header_link_status.setText(link_label)
+            self.header_link_status.setProperty(
+                "state", "nominal" if packet.link_ok else "fault"
+            )
+            self.header_link_status.style().unpolish(self.header_link_status)
+            self.header_link_status.style().polish(self.header_link_status)
+
+            self.header_rate_status.setText("RATE: 10 Hz")
+            self.status_battery.setText(f"BATT: {packet.battery_v:.2f} V")
+            tof_state = "LOCK" if packet.sensor_status.tof else "ERROR"
+            flow_state = "TRACKING" if packet.sensor_status.optical_flow else "ERROR"
+            self.status_tof.setText(f"TOF: {tof_state}  |  FLOW: {flow_state}")
+
             # Update telemetry page
             self.telemetry_panel.update_telemetry(
                 packet
             )
+
+            # Update Flight Control with the latest validated packet.
+            self.control_panel.update_telemetry(packet)
 
             # Keep the drone-view metrics synchronized with telemetry.
             self.drone_view_panel.update_telemetry(packet)
@@ -570,7 +603,7 @@ class MainWindow(QMainWindow):
                 )
 
                 self.diagnostics_panel.link_status.setStyleSheet(
-                    "color: #00ff99;"
+                    "color: #8CB7A1;"
                 )
             else:
                 self.diagnostics_panel.link_status.setText(
@@ -578,7 +611,7 @@ class MainWindow(QMainWindow):
                 )
 
                 self.diagnostics_panel.link_status.setStyleSheet(
-                    "color: #ff4444;"
+                    "color: #D95D50;"
                 )
 
             # Update ToF diagnostics
@@ -588,7 +621,7 @@ class MainWindow(QMainWindow):
                 )
 
                 self.diagnostics_panel.tof_status.setStyleSheet(
-                    "color: #00ff99;"
+                    "color: #8CB7A1;"
                 )
             else:
                 self.diagnostics_panel.tof_status.setText(
@@ -596,7 +629,7 @@ class MainWindow(QMainWindow):
                 )
 
                 self.diagnostics_panel.tof_status.setStyleSheet(
-                    "color: #ff4444;"
+                    "color: #D95D50;"
                 )
 
             # Update optical-flow diagnostics
@@ -606,7 +639,7 @@ class MainWindow(QMainWindow):
                 )
 
                 self.diagnostics_panel.optical_flow_status.setStyleSheet(
-                    "color: #00ff99;"
+                    "color: #8CB7A1;"
                 )
             else:
                 self.diagnostics_panel.optical_flow_status.setText(
@@ -614,7 +647,7 @@ class MainWindow(QMainWindow):
                 )
 
                 self.diagnostics_panel.optical_flow_status.setStyleSheet(
-                    "color: #ff4444;"
+                    "color: #D95D50;"
                 )
 
             # Update battery diagnostics
@@ -626,7 +659,7 @@ class MainWindow(QMainWindow):
 
             if battery > 3.7:
                 self.diagnostics_panel.battery_status.setStyleSheet(
-                    "color: #00ff99;"
+                    "color: #8CB7A1;"
                 )
 
                 self.diagnostics_panel.power_status.setText(
@@ -634,12 +667,12 @@ class MainWindow(QMainWindow):
                 )
 
                 self.diagnostics_panel.power_status.setStyleSheet(
-                    "color: #00ff99;"
+                    "color: #8CB7A1;"
                 )
 
             elif battery > 3.4:
                 self.diagnostics_panel.battery_status.setStyleSheet(
-                    "color: #ffff00;"
+                    "color: #E6BD67;"
                 )
 
                 self.diagnostics_panel.power_status.setText(
@@ -647,12 +680,12 @@ class MainWindow(QMainWindow):
                 )
 
                 self.diagnostics_panel.power_status.setStyleSheet(
-                    "color: #ffff00;"
+                    "color: #E6BD67;"
                 )
 
             else:
                 self.diagnostics_panel.battery_status.setStyleSheet(
-                    "color: #ff4444;"
+                    "color: #D95D50;"
                 )
 
                 self.diagnostics_panel.power_status.setText(
@@ -660,7 +693,7 @@ class MainWindow(QMainWindow):
                 )
 
                 self.diagnostics_panel.power_status.setStyleSheet(
-                    "color: #ff4444;"
+                    "color: #D95D50;"
                 )
 
         except Exception as error:  # noqa: BLE001
@@ -669,7 +702,7 @@ class MainWindow(QMainWindow):
             )
 
             self.system_status.setStyleSheet(
-                "color: #ff4444;"
+                "color: #D95D50;"
             )
 
             self.diagnostics_panel.system_status.setText(
@@ -677,7 +710,7 @@ class MainWindow(QMainWindow):
             )
 
             self.diagnostics_panel.system_status.setStyleSheet(
-                "color: #ff4444;"
+                "color: #D95D50;"
             )
 
             self.diagnostics_panel.diagnostic_message.setText(
@@ -685,7 +718,7 @@ class MainWindow(QMainWindow):
             )
 
             self.diagnostics_panel.diagnostic_message.setStyleSheet(
-                "color: #ff4444;"
+                "color: #D95D50;"
             )
 
     # ======================================================

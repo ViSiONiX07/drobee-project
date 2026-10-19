@@ -116,18 +116,40 @@ QMainWindow {{
 }}
 
 #logo {{
-    color: {Palette.TEXT_PRIMARY};
-    font-size: 18px;
+    color: {Palette.ACCENT_COPPER};
+    font-size: 16px;
     font-weight: bold;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.4px;
+    padding-bottom: 2px;
 }}
 
 #sidebarSubtitle {{
     color: {Palette.TEXT_MUTED};
     font-size: 9px;
-    letter-spacing: 1px;
-    font-weight: 600;
+    letter-spacing: 0.3px;
+    font-weight: 500;
     padding-left: 2px;
+}}
+
+#sidebarSectionLabel {{
+    color: {Palette.TEXT_MUTED};
+    font-family: {FONT_FAMILY_MONO};
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    padding-left: 4px;
+}}
+
+#sidebarFooter {{
+    background-color: {Palette.BG_CANVAS};
+    border: 1px solid {Palette.BORDER_SUBTLE};
+    border-radius: 3px;
+}}
+
+#sidebarFooterValue {{
+    color: {Palette.TEXT_SECONDARY};
+    font-family: {FONT_FAMILY_MONO};
+    font-size: 9px;
 }}
 
 /* Navigation Action Buttons */
@@ -135,25 +157,28 @@ QMainWindow {{
     background-color: transparent;
     color: {Palette.TEXT_SECONDARY};
     border: 1px solid transparent;
-    border-radius: 4px;
+    border-left: 3px solid transparent;
+    border-radius: 3px;
     text-align: left;
-    padding-left: 14px;
-    padding-right: 10px;
-    font-size: 13px;
+    padding-left: 10px;
+    padding-right: 8px;
+    font-size: 12px;
     font-weight: 500;
-    min-height: 40px;
+    min-height: 32px;
 }}
 
 #navButton:hover {{
     background-color: {Palette.HOVER_BG};
     color: {Palette.TEXT_PRIMARY};
     border: 1px solid {Palette.BORDER_HAIRLINE};
+    border-left: 3px solid {Palette.ACCENT_AMBER};
 }}
 
 #navButton[active="true"] {{
-    background-color: {Palette.ACCENT_COPPER};
-    color: {Palette.BG_CANVAS};
-    border: 1px solid {Palette.ACCENT_AMBER};
+    background-color: {Palette.BG_PANEL};
+    color: {Palette.ACCENT_COPPER};
+    border: 1px solid {Palette.BORDER_SUBTLE};
+    border-left: 3px solid {Palette.ACCENT_COPPER};
     font-weight: bold;
 }}
 
@@ -168,16 +193,32 @@ QMainWindow {{
 
 #pageTitle {{
     color: {Palette.TEXT_PRIMARY};
-    font-size: 22px;
+    font-size: 18px;
     font-weight: bold;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.2px;
+}}
+
+#headerReadout {{
+    background-color: {Palette.BG_CANVAS};
+    color: {Palette.TEXT_SECONDARY};
+    border: 1px solid {Palette.BORDER_SUBTLE};
+    border-radius: 3px;
+    padding: 5px 9px;
+    font-family: {FONT_FAMILY_MONO};
+    font-size: 10px;
+    font-weight: 500;
+}}
+
+#headerReadout[state="nominal"] {{
+    color: {Palette.ACCENT_SAGE};
+    border-color: {Palette.BORDER_HAIRLINE};
 }}
 
 #statusBar {{
     background-color: {Palette.BG_SIDEBAR};
     border-top: 1px solid {Palette.BORDER_HAIRLINE};
     font-family: {FONT_FAMILY_MONO};
-    font-size: 11px;
+    font-size: 10px;
 }}
 
 /* -------------------------------------------------------------------------- */
@@ -410,6 +451,48 @@ QTextEdit, QPlainTextEdit {{
     border-radius: 4px;
     font-family: {FONT_FAMILY_MONO};
     font-size: 11px;
+}}
+
+/* Shared instrument header and persistent system strip */
+#headerBreadcrumb {{
+    color: {Palette.TEXT_MUTED};
+    font-family: {FONT_FAMILY_MONO};
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    padding-right: 4px;
+}}
+
+#headerMode {{
+    background-color: {Palette.ACCENT_COPPER};
+    color: {Palette.BG_CANVAS};
+    border: 1px solid {Palette.ACCENT_AMBER};
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-family: {FONT_FAMILY_MONO};
+    font-size: 10px;
+    font-weight: 700;
+}}
+
+#headerReadout[state="fault"] {{
+    color: {Palette.ACCENT_CRIMSON};
+    border-color: {Palette.ACCENT_CRIMSON};
+}}
+
+#statusPrimary, #statusMetric, #statusWarning {{
+    font-family: {FONT_FAMILY_MONO};
+    font-size: 10px;
+    padding-left: 5px;
+    padding-right: 5px;
+}}
+
+#statusMetric {{
+    color: {Palette.TEXT_SECONDARY};
+    border-left: 1px solid {Palette.BORDER_SUBTLE};
+}}
+
+#statusWarning {{
+    color: {Palette.ACCENT_AMBER};
+    border-left: 1px solid {Palette.BORDER_SUBTLE};
 }}
 """
 
