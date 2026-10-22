@@ -1,0 +1,36 @@
+
+name: Firmware PR Checks
+
+on:
+  pull_request:
+    branches:
+      - firmware-dev
+      - main
+  push:
+    branches:
+      - firmware-dev
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  firmware-build:
+    name: Build firmware
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install PlatformIO
+        run: python -m pip install --upgrade platformio
+
+      - name: Compile ESP32-S3 firmware
+        working-directory: firmware
+        run: pio run
