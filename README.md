@@ -118,7 +118,7 @@ The camera stream is intended to travel directly from the ESP32-CAM to the lapto
 | ESP32-CAM | Video source | Intended to stream camera frames directly to the laptop |
 | Raspberry Pi 3 Model B+ (2017) | Companion computer | Packet forwarding and local logging; 1 GB RAM is limited for heavier robotics workloads |
 | External SSD | Local data storage | Used by the Pi for sensor logs; actual capacity, format, power, and sustained write performance must be checked |
-| Laptop | Mapping and development host | Intended to run ROS 2, the chosen SLAM pipeline, RViz2, rosbag recording, and the dashboard |
+| Ground Station Control | Mapping and development host | Intended to run ROS 2, the chosen SLAM pipeline, RViz2, rosbag recording, and the dashboard |
 
 The final airframe, flight controller, motors, ESCs, propellers, battery, and complete flight-power design are not confirmed by this architecture description. Do not treat the bench prototype as a flight-ready vehicle.
 
